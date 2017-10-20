@@ -1,0 +1,259 @@
+18/09/2017
+Dekomposisi (Dari gambar/sistem ke database)
+1. Tentukan Entitas
+2. Tentukan Relasi
+3. Tentukan Kardinalitas
+
+dosen
+=====
+id_dosen
+nama_dosen
+
+mahasiswa
+=========
+kode_mk
+nama_mk
+dosen_pa
+
+Create table dosen(
+	id_dosen int auto_increment,
+	nama_dosen varchar(255) not null,
+	primary key (id_dosen)
+);
+
+Create table mahasiswa(
+	nim varchar(15) primary key,
+	nama varchar(255) not null,
+	dosen_pa int,
+	constraint FK_dosen_mhs
+	foreign key (dosen_pa)
+	references dosen(id_dosen)
+	on update cascade
+	on delete restrict
+);
+
+insert into dosen (nama_dosen) values ('Budi');
+insert into dosen (nama_dosen) values ('Cakra');
+insert into dosen (nama_dosen) values ('Dedi');
+select * from dosen;
+
+insert into mahasiswa values('1234','Andi',3);
+select * from mahasiswa;
+
+delete from dosen where id_dosen = 3;
+
+--Akan error karena masih memiliki child (Andi)
+
+update dosen set id_dosen=4 where id_dosen=3;
+
+insert into dosen (nama_dosen) values ('Eko');
+
+alter table dosen add column program_studi varchar(500);
+update dosen set program_studi = "Ilmu Komputer";
+
+alter table dosen column dosen_pa id_dosen varchar(5);
+alter table dosen change column program_studi prodi int;
+alter table dosen drop column prodi;
+
+rename table dosen to dsn;
+rename table dsn to dosen;
+
+1. Tambahkan kolom jenis kelamin pada mahasiswa dengan tipe varchar(255)
+2. Buat kolom jenis kelamin jadi enum pria dan wanita
+3. Tambahkan kolom alamat bertipe text
+4. Letakkan kolomnya sebelum jenis kelamin
+
+alter table mahasiswa add column jenis_kelamin varchar(255);
+alter table mahasiswa change column jenis_kelamin jenis_kelamin enum('Laki-Laki','Perempuan');
+alter table mahasiswa add column alamat text after dosen_pa;
+
+25/09/2017
+
+-- create database
+
+create database nama_database;
+
+-- import database
+
+mysql -u root nama_database < file_directory;
+
+-- tampilkan kolom
+
+describe table_name;
+
+-- tampilkan data
+
+select [nama_kolom] from [tables];
+select officeCode,city from offices;
+select productCode,productName,productLine from products;
+
+-- tampilkan data unik
+
+select distinct city from customers;
+
+-- tampilkan data dengan nilai tertentu
+
+select customerName from customers where city="NYC";
+
+select distinct jobTitle from employees;
+select firstName,lastName from employees where jobTitle="Sales Rep";
+
+select productName,buyPrice from products where buyPrice<30;
+
+-- between
+
+select productName,buyPrice from products where buyPrice between 30 and 50;
+select productName,buyPrice from products where buyPrice not between 30 and 50;
+
+select orderNumber,orderDate from orders where orderDate between '2004-01-01' and '2004-06-01';
+
+-- wildcards
+
+select firstName,lastName from employees where firstName like "L%";
+select firstName,lastName from employees where lastName like "%on%";
+
+select firstName,lastName from employees where firstName like "T_m";
+
+-- regular expression
+
+select productName from products where productName REGEXP '^(A|B|C)';
+
+-- in
+
+select officeCode,city,country,phone from offices where country in ('USA','FRANCE');
+select officeCode,city,country,phone from offices where country not in ('USA','FRANCE');
+
+-- operator(And, or)
+
+select firstName,lastName,jobTitle from employees where lastName like "%on" and jobTitle="Sales Rep";
+
+select productName,buyPrice,quantityInStock from products where productName like "196%" and buyPrice<50 and quantityInStock>1000;
+
+select productName,buyPrice,quantityInStock from products where (productName like "196%" or buyPrice<50) and quantityInStock>1000;
+
+-- pengurutan(order)
+
+select productName,buyPrice,quantityInStock from products where (productName like "196%" or buyPrice<50) and quantityInStock>1000 order by buyprice;
+
+select productName,buyPrice,quantityInStock from products where (productName like "196%" or buyPrice<50) and quantityInStock>1000 order by buyprice desc;
+
+-- multiple order
+
+select productName,productLine,buyPrice from products order by productLine,buyPrice;
+
+-- limit(offset,limit)
+
+select productName,productLine,buyPrice from products order by productLine,buyPrice limit 10,10;
+
+-- tampilkan 5 produk termahal
+
+select productName,productLine,MSRP from products order by MSRP desc limit 0,5;
+
+-- aritmatika
+
+select productName,productLine,MSRP - buyprice from products order by MSRP - buyprice desc limit 0,5;
+
+-- alias(as)
+
+select productName,productLine,MSRP - buyprice as keuntungan from products order by MSRP - buyprice desc limit 0,5;
+
+-- concat(atribut," ") as atribut_name
+
+SELECT CONCAT(firstName," ",lastName) AS fullname FROM employees;
+
+16/10/2017
+
+Agregate Querry
+SUM, AVG, MIN ,MAX, COUNT
+
+-- rata-rata harga beli produk
+
+SELECT AVG(buyPrice) AS rataProduct FROM products;
+
+-- total stok seluruh produk
+
+SELECT SUM(quantityInStock)  AS totalStock FROM products;
+
+-- berapa jumlah product yang ada di table product ?
+
+SELECT COUNT(1) FROM products;
+
+-- berapa harga terkecil & terbesar product
+
+SELECT MIN(buyPrice) FROM products;
+
+SELECT MAX(buyPrice) FROM products;
+
+-- GROUP BY
+
+-- berapa harga rata-rata setiap kategori produk
+
+SELECT productLine, AVG(buyprice)
+FROM products
+GROUP BY productLine;
+
+-- tampilkan rata-rata dari setiap kategori product
+-- diurutkan dari rendah ke tinggi
+
+SELECT productLine, AVG(buyprice) AS rata
+FROM products
+GROUP BY productLine
+ORDER BY rata;
+
+-- tampilkan harga rata-rata setiap kategori product
+-- yang rata-ratanya diatas 50
+-- diurutkan dari randah ke tinggi
+
+SELECT productLine, AVG(buyprice) AS rata
+FROM products
+GROUP BY productLine
+HAVING rata>50
+ORDER BY rata;
+
+-- tampilkan harga rata-rata setiap kategori product
+-- yang buyPricenya lebih dari 40 dan rata-ratanya diatas 50 
+-- diurutkan dari randah ke tinggi
+
+SELECT productLine, AVG(buyPrice) AS rata
+FROM products
+WHERE buyprice>40
+GROUP BY productLine
+HAVING rata>50
+ORDER BY rata;
+
+-- tampilkan rata-rata keuntungan setiap productline
+
+SELECT productLine, AVG(MSRP - buyPrice) AS rata
+FROM products
+GROUP BY productLine
+ORDER BY rata;
+
+-- tampilkan data karyawan setiap officecode
+
+SELECT officeCode, COUNT(1) AS jumlah
+FROM employees
+GROUP BY officeCode;
+
+-- JOIN
+
+-- tampilkan city dan employeesName dari tabel offices dan employees
+
+SELECT city, CONCAT(firstName," ",lastName) AS fullname
+FROM employees
+	JOIN offices ON employees.officeCode = offices.officeCode;
+
+-- tampilkan jumlah karyawan setiap city
+
+SELECT city, COUNT(1) AS jumlah
+FROM employees
+	JOIN offices ON employees.officeCode = offices.officeCode
+GROUP BY city;
+
+-- tampilkan jumlah product yang tiap product yang terjual
+
+SELECT productName, SUM(quantityOrdered) AS jumlah
+FROM products as p
+	JOIN orderDetails as o ON p.productCode = o.productCode
+GROUP BY productName
+ORDER BY jumlah DESC
+LIMIT 0,5;
