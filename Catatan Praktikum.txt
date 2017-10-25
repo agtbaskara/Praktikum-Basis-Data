@@ -406,7 +406,7 @@ ORDER BY p.amount DESC;
 
 -- 9.	List the value of 'On Hold' orders.
 
-SELECT o.orderNumber, SUM(d.quantityOrdered*d.priceEach) AS value, o.status
+SELECT SUM(d.quantityOrdered*d.priceEach) AS value,o.orderNumber, o.status
 FROM orders o
 JOIN orderDetails d USING(orderNumber)
 WHERE o.status = "On Hold"
