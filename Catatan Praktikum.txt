@@ -258,3 +258,165 @@ FROM products as p
 GROUP BY productName
 ORDER BY jumlah DESC
 LIMIT 0,5;
+
+Tugas 3
+
+-- Single entity
+-- 1.	Prepare a list of offices sorted by country, state, city.
+
+SELECT officeCode, country, state, city
+FROM offices
+ORDER BY country, state, city ASC;
+
+-- 2.	How many employees are there in the company?
+
+SELECT COUNT(1) AS total_employee
+FROM employees;
+
+-- 3.	What is the total of payments received?
+
+SELECT SUM(amount) AS total_payment
+FROM payments;
+
+-- 4.	List the product lines that contain 'Cars'.
+
+SELECT DISTINCT productLine
+FROM products
+WHERE productLine LIKE "%Cars%";
+
+-- 5.	Report total payments for October 28, 2004.
+
+SELECT SUM(amount) AS total_payment
+FROM payments
+WHERE paymentDate = "2004-10-28";
+
+-- 6.	Report those payments greater than $100,000.
+
+SELECT *
+FROM payments
+WHERE amount > 100000;
+
+-- 7.	List the products in each product line.
+
+SELECT  productLine, productName
+FROM products
+ORDER BY productLine ASC;
+
+-- 8.	How many products in each product line?
+
+SELECT  productLine, COUNT(1) AS total_products
+FROM products
+GROUP BY productLine;
+
+-- 9.	What is the minimum payment received?
+
+SELECT MIN(amount) AS minimum_payment
+FROM payments;
+
+--10.	List all payments greater than twice the average payment.
+
+SELECT *
+FROM payments
+WHERE amount > 2*(SELECT AVG(amount) FROM payments);
+
+-- 11.	What is the average percentage markup of the MSRP on buyPrice?
+
+SELECT CONCAT((AVG(MSRP) / AVG(buyprice))*100,"%") AS markup_percentage
+FROM products;
+
+-- 12.	How many distinct products does ClassicModels sell?
+
+SELECT DISTINCT COUNT(productCode) AS total_product
+FROM products;
+
+-- 13.	Report the name and city of customers who don't have sales representatives?
+
+SELECT customerName, city
+FROM customers
+WHERE salesRepEmployeeNumber IS NULL;
+
+-- 14.	What are the names of executives with VP or Manager in their title? Use the CONCAT function to combine the employee's first name and last name into a single field for reporting.
+
+SELECT CONCAT(firstName," ",lastName) AS full_name, jobTitle
+FROM employees
+WHERE jobTitle LIKE "%VP%" OR jobTitle LIKE "%Manager%";
+
+-- 15.	Which orders have a value greater than $5,000?
+
+SELECT orderNumber, SUM(quantityOrdered*priceEach) AS value
+FROM orderDetails
+GROUP BY orderNumber;
+HAVING value > 5000;
+
+One to many relationship
+--1.	Report the account representative for each customer.
+
+SELECT c.customerName,CONCAT(e.firstName," ",e.lastName) as rep_name
+FROM customers c
+LEFT JOIN employees e ON c.salesRepEmployeeNumber = e.employeeNumber;
+
+-- 2.	Report total payments for Atelier graphique.
+
+SELECT SUM(p.amount) AS total_payment
+FROM payments p
+JOIN customers c USING (customerNumber)
+WHERE customerName = "Atelier graphique";
+
+-- 3.	Report the total payments by date
+
+SELECT paymentDate, SUM(amount) AS total_payment
+FROM payments
+GROUP BY paymentDate;
+
+-- 4.	Report the products that have not been sold.
+
+SELECT p.productName
+FROM products p
+LEFT JOIN orderDetails d USING(productCode)
+WHERE d.productCode IS NULL;
+
+-- 5.	List the amount paid by each customer.
+
+SELECT c.customerName, SUM(p.amount) AS total_payment
+FROM customers c
+JOIN payments p USING(customerNumber)
+GROUP BY c.customerName;
+
+-- 6.	How many orders have been placed by Herkku Gifts?
+
+SELECT COUNT(o.orderNumber) AS total_order
+FROM orders o
+JOIN customers c USING (customerNumber)
+WHERE customerName = "Herkku Gifts";
+
+-- 7.	Who are the employees in Boston?
+
+SELECT CONCAT(e.firstName," ",e.lastName) AS full_name, o.city
+FROM employees e
+JOIN offices o USING(officeCode)
+WHERE o.city = "Boston";
+
+-- 8.	Report those payments greater than $100,000. Sort the report so the customer who made the highest payment appears first.
+
+SELECT c.customerName, p.amount
+FROM customers c
+JOIN payments p USING(customerNumber)
+WHERE p.amount > 100000
+ORDER BY p.amount DESC;
+
+-- 9.	List the value of 'On Hold' orders.
+
+SELECT o.orderNumber, SUM(d.quantityOrdered*d.priceEach) AS value, o.status
+FROM orders o
+JOIN orderDetails d USING(orderNumber)
+WHERE o.status = "On Hold"
+GROUP BY o.orderNumber;
+
+-- 10.	Report the number of orders 'On Hold' for each customer.
+
+SELECT c.customerName, COUNT(o.orderNumber) AS total_on_hold_order
+FROM customers c
+JOIN orders o USING(customerNumber)
+WHERE o.status = "On Hold"
+GROUP BY c.customerName;
+
