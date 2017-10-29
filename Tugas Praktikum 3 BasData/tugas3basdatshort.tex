@@ -1,0 +1,537 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{
+	a4paper,
+	left=30mm,
+	top=30mm,
+}
+
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+%Code listing style named "mystyle"
+\lstdefinestyle{mystyle}{
+	backgroundcolor=\color{backcolour},   commentstyle=\color{codegreen},
+	keywordstyle=\color{magenta},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codepurple},
+	basicstyle=\footnotesize,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	numbers=left,                    
+	numbersep=5pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=2
+}
+
+%"mystyle" code listing set
+\lstset{style=mystyle}
+
+\title{Tugas 3 Praktikum Basis Data}
+\author{Baskara (16/398499/PA/17460)}
+\date{25-10-2017}
+\begin{document}
+	\maketitle
+	\paragraph{Single Entity}
+	\begin{enumerate}
+		\item Prepare a list of offices sorted by country, state, city.
+			\begin{verbatim}
+			SELECT officeCode, country, state, city
+			FROM offices
+			ORDER BY country, state, city ASC;
+			
+			RESULT:
+			+------------+-----------+------------+---------------+
+			| officeCode | country   | state      | city          |
+			+------------+-----------+------------+---------------+
+			| 6          | Australia | NULL       | Sydney        |
+			| 4          | France    | NULL       | Paris         |
+			| 5          | Japan     | Chiyoda-Ku | Tokyo         |
+			| 7          | UK        | NULL       | London        |
+			| 1          | USA       | CA         | San Francisco |
+			| 2          | USA       | MA         | Boston        |
+			| 3          | USA       | NY         | NYC           |
+			+------------+-----------+------------+---------------+
+			7 rows in set (0.00 sec)
+			\end{verbatim}
+		\item How many employees are there in the company?
+			\begin{verbatim}
+			SELECT COUNT(1) AS total_employee
+			FROM employees;
+			
+			RESULT:
+			+----------------+
+			| total_employee |
+			+----------------+
+			|             23 |
+			+----------------+
+			1 row in set (0.00 sec)
+			\end{verbatim}
+		\item What is the total of payments received?
+			\begin{verbatim}
+			SELECT SUM(amount) AS total_payment
+			FROM payments;
+			
+			RESULT:
+			+---------------+
+			| total_payment |
+			+---------------+
+			|    8853839.23 |
+			+---------------+
+			1 row in set (0.00 sec)
+			\end{verbatim}
+		\item List the product lines that contain 'Cars'.
+			\begin{verbatim}
+			SELECT DISTINCT productLine
+			FROM products
+			WHERE productLine LIKE "%Cars%";
+			
+			RESULT:
+			+--------------+
+			| productLine  |
+			+--------------+
+			| Classic Cars |
+			| Vintage Cars |
+			+--------------+
+			2 rows in set (0.00 sec)
+			\end{verbatim}
+		\item Report total payments for October 28, 2004.
+			\begin{verbatim}
+			SELECT SUM(amount) AS total_payment
+			FROM payments
+			WHERE paymentDate = "2004-10-28";
+			
+			RESULT:
+			+---------------+
+			| total_payment |
+			+---------------+
+			|      47411.33 |
+			+---------------+
+			1 row in set (0.00 sec)
+			\end{verbatim}
+		\item Report those payments greater than \$100,000.
+			\begin{verbatim}
+			SELECT *
+			FROM payments
+			WHERE amount > 100000;
+			
+			RESULT:
+			+----------------+-------------+-------------+-----------+
+			| customerNumber | checkNumber | paymentDate | amount    |
+			+----------------+-------------+-------------+-----------+
+			|            124 | AE215433    | 2005-03-05  | 101244.59 |
+			|            124 | KI131716    | 2003-08-15  | 111654.40 |
+			|            141 | ID10962     | 2004-12-31  | 116208.40 |
+			|            141 | JE105477    | 2005-03-18  | 120166.58 |
+			|            148 | KM172879    | 2003-12-26  | 105743.00 |
+			+----------------+-------------+-------------+-----------+
+			5 rows in set (0.00 sec)
+			\end{verbatim}
+		\item List the products in each product line.
+			\begin{verbatim}
+			SELECT  productLine, productName
+			FROM products
+			ORDER BY productLine ASC;
+			
+			RESULT:
+			+------------------+---------------------------------------------+
+			| productLine      | productName                                 |
+			+------------------+---------------------------------------------+
+			| Classic Cars     | 1976 Ford Gran Torino                       |
+			| Classic Cars     | 1958 Chevy Corvette Limited Edition         |
+			| Classic Cars     | 1952 Citroen-15CV                           |
+			| Classic Cars     | 1982 Lamborghini Diablo                     |
+			| Classic Cars     | 1969 Chevrolet Camaro Z28                   |
+			| Classic Cars     | 1998 Chrysler Plymouth Prowler              |
+			                               |
+			                               |
+			                               |
+			| Vintage Cars     | 1911 Ford Town Car                          |
+			| Vintage Cars     | 1930 Buick Marquette Phaeton                |
+			| Vintage Cars     | 1932 Model A Ford J-Coupe                   |
+			| Vintage Cars     | 1941 Chevrolet Special Deluxe Cabriolet     |
+			+------------------+---------------------------------------------+
+			110 rows in set (0.00 sec)
+			\end{verbatim}
+		\item How many products in each product line?
+			\begin{verbatim}
+			SELECT  productLine, COUNT(1) AS total_products
+			FROM products
+			GROUP BY productLine;
+			
+			RESULT:
+			+------------------+----------------+
+			| productLine      | total_products |
+			+------------------+----------------+
+			| Classic Cars     |             38 |
+			| Motorcycles      |             13 |
+			| Planes           |             12 |
+			| Ships            |              9 |
+			| Trains           |              3 |
+			| Trucks and Buses |             11 |
+			| Vintage Cars     |             24 |
+			+------------------+----------------+
+			7 rows in set (0.00 sec)
+			\end{verbatim}
+		\item What is the minimum payment received?
+			\begin{verbatim}
+			SELECT MIN(amount) AS minimum_payment
+			FROM payments;
+			
+			RESULT:
+			+-----------------+
+			| minimum_payment |
+			+-----------------+
+			|          615.45 |
+			+-----------------+
+			1 row in set (0.00 sec)
+			\end{verbatim}
+		\item List all payments greater than twice the average payment.
+			\begin{verbatim}
+			SELECT *
+			FROM payments
+			WHERE amount > 2*(SELECT AVG(amount) FROM payments);
+			
+			RESULT:
+			+----------------+-------------+-------------+-----------+
+			| customerNumber | checkNumber | paymentDate | amount    |
+			+----------------+-------------+-------------+-----------+
+			|            114 | MA765515    | 2004-12-15  |  82261.22 |
+			|            124 | AE215433    | 2005-03-05  | 101244.59 |
+			|            124 | BG255406    | 2004-08-28  |  85410.87 |
+			|            124 | ET64396     | 2005-04-16  |  83598.04 |
+			|            124 | KI131716    | 2003-08-15  | 111654.40 |
+			|            141 | ID10962     | 2004-12-31  | 116208.40 |
+			|            141 | IN446258    | 2005-03-25  |  65071.26 |
+			|            141 | JE105477    | 2005-03-18  | 120166.58 |
+			|            148 | KM172879    | 2003-12-26  | 105743.00 |
+			|            167 | GN228846    | 2003-12-03  |  85024.46 |
+			|            239 | NQ865547    | 2004-03-15  |  80375.24 |
+			|            321 | DJ15149     | 2003-11-03  |  85559.12 |
+			|            323 | AL493079    | 2005-05-23  |  75020.13 |
+			+----------------+-------------+-------------+-----------+
+			13 rows in set (0.00 sec)
+			\end{verbatim}
+		\item What is the average percentage markup of the MSRP on buyPrice?
+			\begin{verbatim}
+			SELECT CONCAT((AVG(MSRP) / AVG(buyprice))*100,"%") AS markup_percentage
+			FROM products;
+			
+			RESULT:
+			+-------------------+
+			| markup_percentage |
+			+-------------------+
+			| 184.6463674082%   |
+			+-------------------+
+			1 row in set (0.00 sec)
+			\end{verbatim}
+		\item How many distinct products does ClassicModels sell?
+			\begin{verbatim}
+			SELECT DISTINCT COUNT(productCode) AS total_product
+			FROM products;
+			
+			RESULT:
+			+---------------+
+			| total_product |
+			+---------------+
+			|           110 |
+			+---------------+
+			1 row in set (0.00 sec)
+			\end{verbatim}
+		\item Report the name and city of customers who don't have sales representatives?
+			\begin{verbatim}
+			SELECT customerName, city
+			FROM customers
+			WHERE salesRepEmployeeNumber IS NULL;
+			
+			RESULT:
+			+--------------------------------+------------------+
+			| customerName                   | city             |
+			+--------------------------------+------------------+
+			| Havel & Zbyszek Co             | Warszawa         |
+			| Porto Imports Co.              | Lisboa           |
+			| Asian Shopping Network, Co     | Singapore        |
+			| Natürlich Autos                | Cunewalde        |
+			| ANG Resellers                  | Madrid           |
+			| Messner Shopping Network       | Frankfurt        |
+			| Franken Gifts, Co              | München          |
+			| BG&E Collectables              | Fribourg         |
+			| Schuyler Imports               | Amsterdam        |
+			| Der Hund Imports               | Berlin           |
+			| Cramer Spezialitäten, Ltd      | Brandenburg      |
+			| Asian Treasures, Inc.          | Cork             |
+			| SAR Distributors, Co           | Hatfield         |
+			| Kommission Auto                | Münster          |
+			| Lisboa Souveniers, Inc         | Lisboa           |
+			| Stuttgart Collectable Exchange | Stuttgart        |
+			| Feuer Online Stores, Inc       | Leipzig          |
+			| Warburg Exchange               | Aachen           |
+			| Anton Designs, Ltd.            | Madrid           |
+			| Mit Vergnügen & Co.            | Mannheim         |
+			| Kremlin Collectables, Co.      | Saint Petersburg |
+			| Raanan Stores, Inc             | Herzlia          |
+			+--------------------------------+------------------+
+			22 rows in set (0.00 sec)
+			\end{verbatim}
+		\item What are the names of executives with VP or Manager in their title? Use the CONCAT function to combine the employee's first name and last name into a single field for reporting.
+			\begin{verbatim}
+			SELECT CONCAT(firstName," ",lastName) AS full_name, jobTitle
+			FROM employees
+			WHERE jobTitle LIKE "%VP%" OR jobTitle LIKE "%Manager%";
+			
+			RESULT:
+			+-------------------+----------------------+
+			| full_name         | jobTitle             |
+			+-------------------+----------------------+
+			| Mary Patterson    | VP Sales             |
+			| Jeff Firrelli     | VP Marketing         |
+			| William Patterson | Sales Manager (APAC) |
+			| Gerard Bondur     | Sale Manager (EMEA)  |
+			| Anthony Bow       | Sales Manager (NA)   |
+			+-------------------+----------------------+
+			5 rows in set (0.00 sec)
+			\end{verbatim}
+		\item Which orders have a value greater than \$5,000?
+			\begin{verbatim}
+			SELECT orderNumber, SUM(quantityOrdered*priceEach) AS value
+			FROM orderDetails
+			GROUP BY orderNumber;
+			HAVING value > 5000;
+			
+			RESULT:
+			+-------------+----------+
+			| orderNumber | value    |
+			+-------------+----------+
+			|       10100 | 10223.83 |
+			|       10101 | 10549.01 |
+			|       10102 |  5494.78 |
+			|       10103 | 50218.95 |
+			|       10104 | 40206.20 |
+			|       10105 | 53959.21 |
+			             |
+			             |
+			             |
+			|       10422 |  5849.44 |
+			|       10423 |  8597.73 |
+			|       10424 | 29310.30 |
+			|       10425 | 41623.44 |
+			+-------------+----------+
+			326 rows in set (0.01 sec)
+			\end{verbatim}
+	\end{enumerate}
+	\paragraph{One to many relationship}
+	\begin{enumerate}
+		\item Report the account representative for each customer.
+			\begin{verbatim}
+			SELECT c.customerName,CONCAT(e.firstName," ",e.lastName) as rep_name
+			FROM customers c
+			LEFT JOIN employees e ON c.salesRepEmployeeNumber = e.employeeNumber;
+			
+			RESULT:
+			+------------------------------------+------------------+
+			| customerName                       | rep_name         |
+			+------------------------------------+------------------+
+			| Atelier graphique                  | Gerard Hernandez |
+			| Signal Gift Stores                 | Leslie Thompson  |
+			| Australian Collectors, Co.         | Andy Fixter      |
+			| La Rochelle Gifts                  | Gerard Hernandez |
+			| Baane Mini Imports                 | Barry Jones      |
+			| Mini Gifts Distributors Ltd.       | Leslie Jennings  |
+			                           |
+			                           |
+			                           |
+			| Signal Collectibles Ltd.           | Leslie Jennings  |
+			| Double Decker Gift Stores, Ltd     | Larry Bott       |
+			| Diecast Collectables               | Julie Firrelli   |
+			| Kelly's Gift Shop                  | Peter Marsh      |
+			+------------------------------------+------------------+
+			122 rows in set (0.00 sec)
+			\end{verbatim}
+		\item Report total payments for Atelier graphique.
+			\begin{verbatim}
+			SELECT SUM(p.amount) AS total_payment
+			FROM payments p
+			JOIN customers c USING (customerNumber)
+			WHERE customerName = "Atelier graphique";
+			
+			RESULT:
+			+---------------+
+			| total_payment |
+			+---------------+
+			|      22314.36 |
+			+---------------+
+			1 row in set (0.00 sec)
+			\end{verbatim}
+		\item Report the total payments by date
+			\begin{verbatim}
+			SELECT paymentDate, SUM(amount) AS total_payment
+			FROM payments
+			GROUP BY paymentDate;
+			
+			RESULT:
+			+-------------+---------------+
+			| paymentDate | total_payment |
+			+-------------+---------------+
+			| 2003-01-16  |      10223.83 |
+			| 2003-01-28  |      10549.01 |
+			| 2003-01-30  |       5494.78 |
+			| 2003-02-16  |      50218.95 |
+			| 2003-02-20  |      53959.21 |
+			| 2003-02-25  |      40206.20 |
+			               |
+			               |
+			               |
+			| 2005-05-23  |      75020.13 |
+			| 2005-05-25  |      30253.75 |
+			| 2005-06-03  |      12432.32 |
+			| 2005-06-09  |      46656.94 |
+			+-------------+---------------+
+			232 rows in set (0.00 sec)
+			\end{verbatim}
+		\item Report the products that have not been sold.
+			\begin{verbatim}
+			SELECT p.productName
+			FROM products p
+			LEFT JOIN orderDetails d USING(productCode)
+			WHERE d.productCode IS NULL;
+			
+			RESULT:
+			+-------------------+
+			| productName       |
+			+-------------------+
+			| 1985 Toyota Supra |
+			+-------------------+
+			1 row in set (0.00 sec)
+			\end{verbatim}
+		\item List the amount paid by each customer.
+			\begin{verbatim}
+			SELECT c.customerName, SUM(p.amount) AS total_payment
+			FROM customers c
+			JOIN payments p USING(customerNumber)
+			GROUP BY c.customerName;
+			
+			RESULT:
+			+------------------------------------+---------------+
+			| customerName                       | total_payment |
+			+------------------------------------+---------------+
+			| Alpha Cognac                       |      60483.36 |
+			| Amica Models & Co.                 |      82223.23 |
+			| Anna's Decorations, Ltd            |     137034.22 |
+			| Atelier graphique                  |      22314.36 |
+			| Australian Collectables, Ltd       |      44920.76 |
+			| Australian Collectors, Co.         |     180585.07 |
+			                          |
+			                          |
+			                          |
+			| Vida Sport, Ltd                    |     108777.92 |
+			| Vitachrome Inc.                    |      72497.64 |
+			| Volvo Model Replicas, Co           |      43680.65 |
+			| West Coast Collectables Co.        |      43748.72 |
+			+------------------------------------+---------------+
+			98 rows in set (0.00 sec)
+			\end{verbatim}
+		\item How many orders have been placed by Herkku Gifts?
+			\begin{verbatim}
+			SELECT COUNT(o.orderNumber) AS total_order
+			FROM orders o
+			JOIN customers c USING (customerNumber)
+			WHERE customerName = "Herkku Gifts";
+			
+			RESULT:
+			+-------------+
+			| total_order |
+			+-------------+
+			|           3 |
+			+-------------+
+			1 row in set (0.00 sec)
+			\end{verbatim}
+		\item Who are the employees in Boston?
+			\begin{verbatim}
+			SELECT CONCAT(e.firstName," ",e.lastName) AS full_name, o.city
+			FROM employees e
+			JOIN offices o USING(officeCode)
+			WHERE o.city = "Boston";
+			
+			RESULT:
+			+-----------------+--------+
+			| full_name       | city   |
+			+-----------------+--------+
+			| Julie Firrelli  | Boston |
+			| Steve Patterson | Boston |
+			+-----------------+--------+
+			2 rows in set (0.00 sec)
+			\end{verbatim}
+		\item Report those payments greater than \$100,000. Sort the report so the customer who made the highest payment appears first.
+			\begin{verbatim}
+			SELECT c.customerName, p.amount
+			FROM customers c
+			JOIN payments p USING(customerNumber)
+			WHERE p.amount > 100000
+			ORDER BY p.amount DESC;
+			
+			RESULT:
+			+------------------------------+-----------+
+			| customerName                 | amount    |
+			+------------------------------+-----------+
+			| Euro+ Shopping Channel       | 120166.58 |
+			| Euro+ Shopping Channel       | 116208.40 |
+			| Mini Gifts Distributors Ltd. | 111654.40 |
+			| Dragon Souveniers, Ltd.      | 105743.00 |
+			| Mini Gifts Distributors Ltd. | 101244.59 |
+			+------------------------------+-----------+
+			5 rows in set (0.00 sec)
+			\end{verbatim}
+		\item List the value of 'On Hold' orders.
+			\begin{verbatim}
+			SELECT SUM(d.quantityOrdered*d.priceEach) AS value,o.orderNumber, o.status
+			FROM orders o
+			JOIN orderDetails d USING(orderNumber)
+			WHERE o.status = "On Hold"
+			GROUP BY o.orderNumber;
+			
+			RESULT:
+			+----------+-------------+---------+
+			| value    | orderNumber | status  |
+			+----------+-------------+---------+
+			| 23014.17 |       10334 | On Hold |
+			| 43525.04 |       10401 | On Hold |
+			| 52229.55 |       10407 | On Hold |
+			| 50806.85 |       10414 | On Hold |
+			+----------+-------------+---------+
+			4 rows in set (0.00 sec)
+			\end{verbatim}
+		\item Report the number of orders 'On Hold' for each customer.
+			\begin{verbatim}
+			content.SELECT c.customerName, COUNT(o.orderNumber) AS total_on_hold_order
+			FROM customers c
+			JOIN orders o USING(customerNumber)
+			WHERE o.status = "On Hold"
+			GROUP BY c.customerName;
+			
+			RESULT:
+			+---------------------------+---------------------+
+			| customerName              | total_on_hold_order |
+			+---------------------------+---------------------+
+			| Gifts4AllAges.com         |                   1 |
+			| Tekni Collectables Inc.   |                   1 |
+			| The Sharp Gifts Warehouse |                   1 |
+			| Volvo Model Replicas, Co  |                   1 |
+			+---------------------------+---------------------+
+			4 rows in set (0.00 sec)
+			\end{verbatim}
+	\end{enumerate}
+\end{document}
