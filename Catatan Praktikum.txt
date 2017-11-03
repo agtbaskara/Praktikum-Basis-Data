@@ -420,3 +420,130 @@ JOIN orders o USING(customerNumber)
 WHERE o.status = "On Hold"
 GROUP BY c.customerName;
 
+30/10/2017
+--PROCEDURE
+
+--membuat procedure
+DELIMITER //
+CREATE PROCEDURE getAllProducts()
+BEGIN
+
+--disini query
+SELECT *
+From products;
+
+END//
+DELIMITER ;
+
+--memanggil procedure
+CALL getAllProducts();
+
+--menghapus procedure
+DROP PROCEDURE IF EXISTS getAllProducts;
+
+--membuat procedure
+DELIMITER //
+CREATE PROCEDURE getAllProducts()
+BEGIN
+
+--disini query
+SELECT COUNT(1)
+From products;
+
+END//
+DELIMITER ;
+
+--memanggil procedure
+CALL getAllProducts();
+
+
+--DEKLARASI VARIABEL
+--membuat procedure
+DELIMITER //
+CREATE PROCEDURE jumlahKaryawan()
+BEGIN
+DECLARE total INT DEFAULT 0;
+
+--disini query
+SELECT COUNT(1)
+From products
+INTO total;
+
+SELECT total;
+
+END//
+DELIMITER ;
+
+--memanggil procedure
+CALL jumlahKaryawan();
+
+
+--membuat procedure
+DELIMITER //
+CREATE PROCEDURE jumlahKaryawan()
+BEGIN
+DECLARE total INT DEFAULT 0;
+DECLARE nama VARCHAR(250);
+DECLARE var1, var2 INT;
+SET nama = "abc";
+SET var1= 5;
+SET var2= 2;
+
+SET total = var1 + var2;
+
+SELECT total;
+SELECT nama;
+
+END//
+DELIMITER ;
+
+--memanggil procedure
+CALL jumlahKaryawan();
+
+
+--CONTROL STATEMENT
+DELIMITER //
+CREATE PROCEDURE kriteria()
+	BEGIN
+	
+	DECLARE price INT;
+	DECLARE kriterianya VARCHAR (20);
+	
+	SET price= 40;
+
+	IF price > 100 THEN
+		SET kriterianya= "MAHAL";
+	ELSE
+		SET kriterianya= "MURAH";
+	END IF;
+	
+	SELECT kriterianya;
+	END//
+	
+	DELIMITER ;
+
+--memanggil procedure
+CALL kriteria;
+
+
+--LOOPING
+DELIMITER // 
+CREATE PROCEDURE perulangan( 
+    in batas INT) 
+BEGIN
+
+DECLARE var INT DEFAULT 0 ;  
+DECLARE num INT ; 
+
+SET num = 1 ; 
+WHILE var < batas DO 
+    SELECT var ; 
+    SET var = var + 1 ; 
+    END WHILE ; 
+
+    END//
+	
+DELIMITER ;
+
+--memanggil procedure
+CALL perulangan(5);
