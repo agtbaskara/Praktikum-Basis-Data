@@ -547,3 +547,104 @@ DELIMITER ;
 
 --memanggil procedure
 CALL perulangan(5);
+
+Tugas 4
+Many to many relationship
+1.	List products sold by order date.
+
+SELECT o.orderDate, p.productName
+FROM products p
+JOIN orderdetails d USING(productCode)
+JOIN orders o USING(orderNumber)
+ORDER BY o.orderDate DESC;
+
+2.	List the order dates in descending order for orders for the 1940 Ford Pickup Truck.
+
+SELECT o.orderDate
+FROM orders o
+JOIN orderdetails d USING(orderNumber)
+JOIN products p USING(productCode)
+WHERE p.productName ="1940 Ford Pickup Truck"
+ORDER BY o.orderDate DESC;
+
+3.	List the names of customers and their corresponding order number where a particular order from that customer has a value greater than $25,000?
+
+SELECT c.customerName, o.orderNumber,  d.quantityOrdered*d.priceEach AS total_value
+FROM customers c
+JOIN orders o USING(customerNumber)
+JOIN orderdetails d USING(orderNumber)
+WHERE d.quantityOrdered*d.priceEach > 25000
+ORDER BY d.quantityOrdered*d.priceEach DESC;
+
+4.	Are there any products that appear on all orders?
+
+SELECT p.productName, d.orderNumber
+FROM orders o
+LEFT JOIN orderdetails d USING(orderNumber)
+LEFT JOIN products p USING(productCode)
+HAVING COUNT(d.orderNumber) = (SELECT DISTINCT COUNT(o.orderNumber) FROM orders o);
+
+
+5.	List the names of products sold at less than 80% of the MSRP.
+
+SELECT p.productName, d.priceEach, p.MSRP
+FROM products p
+JOIN orderdetails d USING(productCode)
+WHERE (d.priceEach/p.MSRP)<0.8;
+
+
+6.	Reports those products that have been sold with a markup of 100% or more (i.e.,  the priceEach is at least twice the buyPrice)
+
+SELECT p.productName, d.priceEach, p.buyPrice
+FROM products p
+JOIN orderdetails d USING(productCode)
+WHERE (d.priceEach/p.buyPrice)>=2;
+
+7.	List the products ordered on a Monday.
+
+SELECT p.productName, DAYNAME(o.orderDate) AS DAY
+FROM products p
+JOIN orderdetails d USING(productCode)
+JOIN orders o USING(orderNumber)
+WHERE DAYNAME(o.orderDate) = 'Monday';
+
+8.	What is the quantity on hand for products listed on 'On Hold' orders?
+
+SELECT SUM(d.quantityOrdered) AS Quantity
+FROM orders o
+JOIN orderdetails d
+WHERE o.status='On Hold';
+
+Procedures
+Create a procedure for purchasing an item. The procedure will be called PURCHASE and this procedire will have two parameters:
+-	Product Code
+-	Quantity
+This procedure will do the following task:
+1.	Check if the following product exist 
+2.	Check if the product have enough stock (based on the requested quantity)
+3.	Write the order and the details
+4.	Write the payments
+5.	Reduce the stock in product
+
+DROP PROCEDURE IF EXISTS Purchase;
+
+DELIMITER // 
+CREATE PROCEDURE Purchase (IN PCODE VARCHAR(10), IN QTY INT) 
+	BEGIN
+		IF EXISTS (SELECT p.productCode FROM products p WHERE productCode = PCODE) THEN
+			IF (SELECT p.quantityInStock FROM products p WHERE productCode = PCODE) >= QTY THEN
+				INSERT INTO orders (orderDate, requiredDate, shippedDate, status, comments, customerNumber)
+				VALUES (CURDATE(), CURDATE(), CURDATE(), 'On Hold', 'Order Baru Gan', 103);
+				INSERT INTO orderdetails (orderNumber, productCode, quantityOrdered, priceEach, orderLineNumber)
+				VALUES (LAST_INSERT_ID(), PCODE, QTY, (SELECT buyPrice FROM products WHERE productCode = PCODE),  (SELECT productLine FROM products WHERE productCode = PCODE));
+				UPDATE products SET quantityInStock = quantityInStock - QTY WHERE productCode = PCODE;
+			ELSE
+				SELECT "STOCK TIDAK CUKUP" AS MESSAGE;
+			END IF;
+			ELSE
+			SELECT "PRODUCT NOT EXIST" AS MESSAGE;;
+		END IF;
+	END//
+DELIMITER ;
+
+CALL Purchase("S10_1949", 10);
