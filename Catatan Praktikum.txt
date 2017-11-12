@@ -569,12 +569,13 @@ ORDER BY o.orderDate DESC;
 
 3.	List the names of customers and their corresponding order number where a particular order from that customer has a value greater than $25,000?
 
-SELECT c.customerName, o.orderNumber,  d.quantityOrdered*d.priceEach AS total_value
+SELECT c.customerName, o.orderNumber,  SUM(d.quantityOrdered*d.priceEach) AS total_value
 FROM customers c
 JOIN orders o USING(customerNumber)
 JOIN orderdetails d USING(orderNumber)
-WHERE d.quantityOrdered*d.priceEach > 25000
-ORDER BY d.quantityOrdered*d.priceEach DESC;
+GROUP BY c.customerName
+HAVING SUM(d.quantityOrdered*d.priceEach) > 25000
+ORDER BY SUM(d.quantityOrdered*d.priceEach) DESC;
 
 4.	Are there any products that appear on all orders?
 
@@ -619,6 +620,7 @@ Procedures
 Create a procedure for purchasing an item. The procedure will be called PURCHASE and this procedire will have two parameters:
 -	Product Code
 -	Quantity
+-	CustomerNumber
 This procedure will do the following task:
 1.	Check if the following product exist 
 2.	Check if the product have enough stock (based on the requested quantity)
@@ -629,22 +631,64 @@ This procedure will do the following task:
 DROP PROCEDURE IF EXISTS Purchase;
 
 DELIMITER // 
-CREATE PROCEDURE Purchase (IN PCODE VARCHAR(10), IN QTY INT) 
+CREATE PROCEDURE Purchase (IN PCODE VARCHAR(10), IN QTY INT, IN CNUMBER INT) 
 	BEGIN
 		IF EXISTS (SELECT p.productCode FROM products p WHERE productCode = PCODE) THEN
 			IF (SELECT p.quantityInStock FROM products p WHERE productCode = PCODE) >= QTY THEN
-				INSERT INTO orders (orderDate, requiredDate, shippedDate, status, comments, customerNumber)
+				INSERT INTO orders (orderDate, requiredDate, shippedDate, status, comments, CNUMBER)
 				VALUES (CURDATE(), CURDATE(), CURDATE(), 'On Hold', 'Order Baru Gan', 103);
 				INSERT INTO orderdetails (orderNumber, productCode, quantityOrdered, priceEach, orderLineNumber)
-				VALUES (LAST_INSERT_ID(), PCODE, QTY, (SELECT buyPrice FROM products WHERE productCode = PCODE),  (SELECT productLine FROM products WHERE productCode = PCODE));
+				VALUES (LAST_INSERT_ID(), PCODE, QTY, (SELECT buyPrice FROM products WHERE productCode = PCODE),(SELECT productLine FROM products WHERE productCode = PCODE));
 				UPDATE products SET quantityInStock = quantityInStock - QTY WHERE productCode = PCODE;
 			ELSE
 				SELECT "STOCK TIDAK CUKUP" AS MESSAGE;
 			END IF;
 			ELSE
-			SELECT "PRODUCT NOT EXIST" AS MESSAGE;;
+				SELECT "PRODUCT NOT EXIST" AS MESSAGE;
 		END IF;
 	END//
 DELIMITER ;
 
-CALL Purchase("S10_1949", 10);
+CALL Purchase("S10_1949", 10, 103);
+
+06/11/2017
+--View
+
+CREATE VIEW salesPerOrder AS
+SELECT
+	orderNumber,
+	SUM(quantityOrdered*priceEach) AS total
+FROM orderDetails
+GROUP BY orderNumber
+ORDER BY total DESC;
+
+SHOW FULL TABLES;
+
+SELECT *
+FROM salesPerOrder
+WHERE total>5000;
+
+SHOW CREATE VIEW salesPerOrder;
+
+--Function
+
+DELIMITER //
+CREATE FUNCTION customerLevel(p_creditLimit  double) RETURNS VARCHAR(10)
+	BEGIN
+		DECLARE lvl VARCHAR(10);
+		SET lvl = "";
+		IF(p_creditLimit>50000) THEN
+			SET lvl = "PLATINUM";
+		ELSEIF(p_creditLimit>10000) THEN
+			SET lvl = "GOLD";
+		ELSE
+			SET lvl = "SILVER";
+		END IF;
+		RETURN(lvl);
+	END//
+DELIMITER ;
+
+--Menggunakan function di salah satu column
+
+SELECT customerName, customerLevel(creditLimit) AS level, creditLimit
+FROM customers;

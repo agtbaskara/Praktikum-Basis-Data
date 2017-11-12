@@ -13,6 +13,7 @@
 \usepackage{float}
 \usepackage{listings}
 \usepackage{color}
+\usepackage{fancyvrb}
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
@@ -103,15 +104,31 @@
 			\end{verbatim}
 		\item List the names of customers and their corresponding order number where a particular order from that customer has a value greater than \$25,000?
 			\begin{verbatim}
-			SELECT c.customerName, o.orderNumber,  d.quantityOrdered*d.priceEach AS total_value
+			SELECT c.customerName, o.orderNumber,  SUM(d.quantityOrdered*d.priceEach) AS total_value
 			FROM customers c
 			JOIN orders o USING(customerNumber)
 			JOIN orderdetails d USING(orderNumber)
-			WHERE d.quantityOrdered*d.priceEach > 25000
-			ORDER BY d.quantityOrdered*d.priceEach DESC;
+			GROUP BY c.customerName
+			HAVING SUM(d.quantityOrdered*d.priceEach) > 25000
+			ORDER BY SUM(d.quantityOrdered*d.priceEach) DESC;
 			
 			RESULT:
-			Empty set (0.16 sec)
+			+------------------------------------+-------------+-------------+
+			| customerName                       | orderNumber | total_value |
+			+------------------------------------+-------------+-------------+
+			| Euro+ Shopping Channel             |       10104 |   820689.54 |
+			| Mini Gifts Distributors Ltd.       |       10113 |   591827.34 |
+			| Australian Collectors, Co.         |       10120 |   180585.07 |
+			| Muscle Machine Inc                 |       10127 |   177913.95 |
+			| La Rochelle Gifts                  |       10275 |   158573.12 |
+			                                .
+			                                .
+			                                .
+			| Microscale Inc.                    |       10242 |    29230.43 |
+			| Royale Belge                       |       10116 |    29217.18 |
+			| Frau da Collezione                 |       10157 |    25358.32 |
+			+------------------------------------+-------------+-------------+
+			95 rows in set (0.31 sec)
 			\end{verbatim}
 		\item Are there any products that appear on all orders?
 			\begin{verbatim}
@@ -239,24 +256,25 @@
 	DROP PROCEDURE IF EXISTS Purchase;
 	
 	DELIMITER // 
-	CREATE PROCEDURE Purchase (IN PCODE VARCHAR(10), IN QTY INT) 
+	CREATE PROCEDURE Purchase (IN PCODE VARCHAR(10), IN QTY INT, IN CNUMBER INT) 
 	BEGIN
 	IF EXISTS (SELECT p.productCode FROM products p WHERE productCode = PCODE) THEN
 	IF (SELECT p.quantityInStock FROM products p WHERE productCode = PCODE) >= QTY THEN
-	INSERT INTO orders (orderDate, requiredDate, shippedDate, status, comments, customerNumber)
+	INSERT INTO orders (orderDate, requiredDate, shippedDate, status, comments, CNUMBER)
 	VALUES (CURDATE(), CURDATE(), CURDATE(), 'On Hold', 'Order Baru Gan', 103);
 	INSERT INTO orderdetails (orderNumber, productCode, quantityOrdered, priceEach, orderLineNumber)
-	VALUES (LAST_INSERT_ID(), PCODE, QTY, (SELECT buyPrice FROM products WHERE productCode = PCODE),  (SELECT productLine FROM products WHERE productCode = PCODE));
+	VALUES (LAST_INSERT_ID(), PCODE, QTY, (SELECT buyPrice FROM products WHERE productCode = PCODE),
+	(SELECT productLine FROM products WHERE productCode = PCODE));
 	UPDATE products SET quantityInStock = quantityInStock - QTY WHERE productCode = PCODE;
 	ELSE
 	SELECT "STOCK TIDAK CUKUP" AS MESSAGE;
 	END IF;
 	ELSE
-	SELECT "PRODUCT NOT EXIST" AS MESSAGE;;
+	SELECT "PRODUCT NOT EXIST" AS MESSAGE;
 	END IF;
 	END//
 	DELIMITER ;
 	
-	CALL Purchase("S10_1949", 10);
+	CALL Purchase("S10_1949", 10, 103);
 	\end{verbatim}
 \end{document}
