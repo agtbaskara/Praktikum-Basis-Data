@@ -692,3 +692,122 @@ DELIMITER ;
 
 SELECT customerName, customerLevel(creditLimit) AS level, creditLimit
 FROM customers;
+
+
+--Quiz
+
+KUIS BASIS DATA
+Nama : Baskara
+NIM : 16/398499/PA/17460
+
+SQL Query
+1. Tampilkan Employee yang berasal dari “Boston”
+
+SELECT CONCAT(e.firstName," ",e.lastName) AS name, o.city
+FROM employees e
+JOIN offices o USING(officeCode)
+WHERE o.city = "Boston";
+
+2. Tampilkan Customer yang namanya berakhiran dengan “Diecast”
+
+SELECT CONCAT(c.customerName) AS full_name
+FROM customers c
+WHERE c.customerName LIKE "%Diecast";
+
+3. Tampilkan nama karyawan yang memiliki kata Larry atau Barry
+
+SELECT CONCAT(e.firstName," ",e.lastName) AS name
+FROM employees e
+WHERE e.firstName = "Larry" OR e.firstName = "Barry" or e.lastName = "Larry" OR e.lastname = "Barry";
+
+4. Tampilkan jumlah order per tahunnya (berdasarkan orderDate)
+
+SELECT YEAR(o.orderDate) AS tahun, COUNT(o.orderNumber) AS jumlah
+FROM orders o
+GROUP BY tahun;
+
+5. Tampilkan jumlah produk terjual per tahunnya (berdasarkan orderDate dan
+quantityOrdered)
+
+SELECT YEAR(o.orderDate) AS tahun, SUM(d.quantityOrdered) as jumlah
+FROM orders o
+JOIN orderDetails d USING(orderNumber)
+GROUP BY YEAR(o.orderDate);
+
+6. Tampilkan kategori produk yang paling banyak terjual pada tahun 2003
+
+SELECT YEAR(o.orderDate) AS tahun, p.productline AS kategori, SUM(d.quantityOrdered) AS jumlah
+FROM products p
+JOIN orderDetails d USING(productCode)
+JOIN orders o USING(orderNumber)
+GROUP BY p.productline
+HAVING tahun = 2003
+ORDER BY jumlah DESC
+LIMIT 1;
+
+7. Tampilkan kantor (office) yang paling banyak menjual produk pada tahun 2003
+
+SELECT of.officeCode, of.city, SUM(d.quantityOrdered) AS jumlah
+FROM offices of
+JOIN employees e USING(officeCode)
+JOIN customers c ON e.employeeNumber = c.salesRepEmployeeNumber
+JOIN orders o USING(customerNumber)
+JOIN orderdetails d USING(orderNumber)
+GROUP BY of.officecode
+ORDER BY jumlah DESC
+LIMIT 1;
+
+Stored Procedure, Function
+1. Setiap karyawan yang mampu menjual produk ke customer akan mendapat bonus di
+akhir tahun. Bonus adalah keuntungan penjualan dikali 20%. Keuntungan didapatkan
+dari buyPrice produk - priceEach pada order. Buatlah sebuah procedure untuk
+mendapatkan bonus karyawan pada sebuah tahun.
+a. GetBonus(employee_number,order_year)
+
+DROP PROCEDURE IF EXISTS GetBonus;
+DELIMITER //
+CREATE PROCEDURE GetBonus(IN employee_number INT, IN order_year INT)
+BEGIN
+	SELECT 20*SUM(d.priceEach-p.BuyPrice)/100 AS bonus
+	FROM employees e
+	JOIN customers c ON e.employeeNumber = c.salesRepEmployeeNumber
+	JOIN orders o USING(customerNumber)
+	JOIN orderdetails d USING(orderNumber)
+	JOIN products p USING(productCode)
+	WHERE YEAR(orderDate) = order_year
+	GROUP BY e.employeeNumber
+	HAVING e.employeeNumber = employee_number;
+END//
+DELIMITER ;
+
+CALL GetBonus(1401,2003);
+
+2. Buatlah sebuah fungsi yang mengeluarkan gaji karyawan berdasarkan jobTitle.
+a. President = 100
+b. Vice President (VP) = 80
+c. Manager = 60
+d. Sales Rep = 40
+
+DROP FUNCTION IF EXISTS GetGaji;
+DELIMITER //
+CREATE FUNCTION GetGaji(jobTitle  VARCHAR(20)) RETURNS INT
+	BEGIN
+		DECLARE Gaji INT;
+		SET Gaji = 0;
+		IF(jobTitle LIKE "%President%") THEN
+			SET Gaji = 100;
+		ELSEIF(jobTitle LIKE "%VP%") THEN
+			SET Gaji = 80;
+		ELSEIF(jobTitle LIKE "%Manager%") THEN
+			SET Gaji = 60;
+		ELSEIF(jobTitle LIKE "%Sales Rep%") THEN
+			SET Gaji = 40;
+		ELSE
+			SET Gaji = 0;
+		END IF;
+		RETURN(Gaji);
+	END//
+DELIMITER ;
+
+SELECT employeeNumber, jobTitle, GetGaji(jobTitle) AS Gaji
+FROM employees;
