@@ -693,6 +693,105 @@ DELIMITER ;
 SELECT customerName, customerLevel(creditLimit) AS level, creditLimit
 FROM customers;
 
+13/11/2017
+
+-- 1. TRANSACTION
+
+-- start a new transaction
+start transaction;
+ 
+-- get latest order number
+select @orderNumber := max(orderNUmber) 
+from orders;
+-- set new order number
+set @orderNumber = @orderNumber  + 1;
+ 
+-- insert a new order for customer 145
+insert into orders(orderNumber,
+                   orderDate,
+                   requiredDate,
+                   shippedDate,
+                   status,
+                   customerNumber)
+values(@orderNumber,
+       now(),
+       date_add(now(), INTERVAL 5 DAY),
+       date_add(now(), INTERVAL 2 DAY),
+       'In Process',
+        145);
+-- insert 2 order line items
+insert into orderdetails(orderNumber,
+                         productCode,
+                         quantityOrdered,
+                         priceEach,
+                         orderLineNumber)
+values(@orderNumber,'S18_1749', 30, '136', 1),
+      (@orderNumber,'S18_2248', 50, '55.09', 2); 
+-- commit changes    
+commit; 
+
+-- kalau gagal rollback changes       
+rollback;
+
+-- get the new inserted order
+select * from orders a 
+inner join orderdetails b on a.ordernumber = b.ordernumber
+where a.ordernumber = @ordernumber;
+
+
+
+-- 2. TRIGGER
+
+CREATE TABLE employees_audit (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    employeeNumber INT NOT NULL,
+    lastname VARCHAR(50) NOT NULL,
+    changedat DATETIME DEFAULT NULL,
+    action VARCHAR(50) DEFAULT NULL
+);
+
+DELIMITER $$
+CREATE TRIGGER before_employee_update 
+    BEFORE UPDATE ON employees
+    FOR EACH ROW 
+BEGIN
+    INSERT INTO employees_audit
+    SET action = 'update',
+     employeeNumber = OLD.employeeNumber,
+        lastname = OLD.lastname,
+        changedat = NOW(); 
+END$$
+DELIMITER ;
+
+-- 3. EVENTS
+
+CREATE TABLE IF NOT EXISTS messages (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    message VARCHAR(255) NOT NULL,
+    created_at DATETIME NOT NULL
+);
+
+CREATE EVENT IF NOT EXISTS test_event_01
+ON SCHEDULE AT CURRENT_TIMESTAMP + INTERVAL 1 MINUTE
+DO
+  INSERT INTO messages(message,created_at)
+  VALUES('Test MySQL Event 1',NOW());
+  
+SELECT * FROM messages;
+
+SHOW EVENTS;
+
+CREATE EVENT test_event_03
+ON SCHEDULE EVERY 1 MINUTE
+STARTS CURRENT_TIMESTAMP
+ENDS CURRENT_TIMESTAMP + INTERVAL 1 HOUR
+DO
+   INSERT INTO messages(message,created_at)
+   VALUES('Test MySQL recurring Event',NOW());
+
+	
+
+20/11/2017
 
 --Quiz
 
